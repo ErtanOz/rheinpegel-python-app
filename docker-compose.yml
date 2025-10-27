@@ -1,0 +1,15 @@
+version: "3.9"
+services:
+  rheinpegel:
+    build: .
+    image: rheinpegel-app:latest
+    ports:
+      - "${PORT:-8000}:8000"
+    environment:
+      SOURCE_URL: "https://www.stadt-koeln.de/interne-dienste/hochwasser/pegel_ws.php"
+      REFRESH_SECONDS: "120"
+      TZ: "Europe/Berlin"
+      PORT: "8000"
+    volumes:
+      - ./data:/app/data
+    restart: unless-stopped

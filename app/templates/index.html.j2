@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Rheinpegel Köln</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="{{ url_for('static', path='styles.css') }}" />
+    <script
+        defer
+        src="{{ url_for('static', path='app.js') }}"
+        data-api-latest="{{ url_for('api_latest') }}"
+        data-api-history="{{ url_for('api_history') }}"
+        data-refresh="{{ auto_refresh_seconds }}"
+        data-demo="{{ 'true' if demo_mode else 'false' }}"
+    ></script>
+</head>
+<body class="page" data-demo="{{ 'true' if demo_mode else 'false' }}" data-timezone="{{ timezone }}">
+    <header class="site-header">
+        <div class="title-block">
+            <h1>Rheinpegel Köln</h1>
+            <p class="subtitle">Aktueller Wasserstand, Trend und Verlauf der letzten 48 Messpunkte</p>
+        </div>
+        <span id="demoBadge" class="badge badge-demo" {% if not demo_mode %}hidden{% endif %} aria-live="polite">Demo-Modus aktiv</span>
+    </header>
+    <main class="layout">
+        <section class="card status-card" aria-labelledby="status-heading">
+            <header class="card-header">
+                <h2 id="status-heading">Aktueller Pegel</h2>
+                {% if latest %}
+                <span id="warningBadge" class="badge {{ latest.warning.color }}">{{ latest.warning.label }}</span>
+                {% else %}
+                <span id="warningBadge" class="badge badge-muted">Keine Daten</span>
+                {% endif %}
+            </header>
+            <div id="errorBanner" class="alert" role="alert" hidden aria-live="assertive"></div>
+            <div class="level-display">
+                <span class="level-number" aria-live="polite">
+                    <span id="levelValue" class="level-number-value">{% if latest %}{{ latest.level_cm }}{% else %}–{% endif %}</span>
+                    <span class="unit">cm</span>
+                </span>
+                {% set trend_class = 'badge-stable' %}
+                {% set trend_label = 'gleichbleibend' %}
+                {% set trend_symbol = '→' %}
+                {% if latest %}
+                    {% if latest.trend.value == 1 %}
+                        {% set trend_class = 'badge-rising' %}
+                        {% set trend_label = 'steigend' %}
+                        {% set trend_symbol = '↑' %}
+                    {% elif latest.trend.value == -1 %}
+                        {% set trend_class = 'badge-falling' %}
+                        {% set trend_label = 'fallend' %}
+                        {% set trend_symbol = '↓' %}
+                    {% endif %}
+                {% endif %}
+                <span id="trendBadge" class="badge trend-badge {{ trend_class }}" aria-live="polite" aria-label="Trend {{ trend_label }}">
+                    <span id="trendSymbol">{{ trend_symbol }}</span>
+                    <span id="trendText" class="sr-only">{{ trend_label }}</span>
+                </span>
+            </div>
+            <div class="status-meta" aria-live="polite">
+                <span id="updatedTime" data-timestamp="{% if latest %}{{ latest.timestamp.isoformat() }}{% endif %}">
+                    {% if latest %}
+                        Zuletzt aktualisiert: {{ latest.timestamp.astimezone().strftime('%d.%m.%Y %H:%M:%S') }} Uhr
+                    {% else %}
+                        Keine Messwerte verfügbar
+                    {% endif %}
+                </span>
+                <span id="relativeAge">{% if latest %}vor wenigen Sekunden{% endif %}</span>
+            </div>
+            <div class="controls" role="group" aria-label="Datenaktualisierung">
+                <button type="button" id="refreshButton" class="btn primary">Jetzt aktualisieren</button>
+                <label class="toggle" for="autoRefreshToggle">
+                    <input type="checkbox" id="autoRefreshToggle" checked aria-checked="true" />
+                    <span>Auto-Refresh</span>
+                </label>
+                <span id="countdown" aria-live="polite">Nächste Aktualisierung in {{ '%02d:%02d'|format((auto_refresh_seconds // 60), (auto_refresh_seconds % 60)) }}</span>
+            </div>
+            <figure class="sparkline" role="img" aria-label="Sparkline der letzten 24 Messwerte">
+                <svg id="sparklineChart" viewBox="0 0 100 40" preserveAspectRatio="none">
+                    <path id="sparklinePath" d="{{ sparkline_path }}" />
+                    <line class="baseline" x1="0" x2="100" y1="40" y2="40" />
+                </svg>
+                <figcaption>Verlauf der letzten 24 Messungen</figcaption>
+            </figure>
+        </section>
+        <section class="card legend-card" aria-labelledby="legend-heading">
+            <h2 id="legend-heading">Warnstufen</h2>
+            <ul class="legend-list">
+                {% for level in warning_levels %}
+                <li class="legend-item">
+                    <span class="badge {{ level.color }}" aria-hidden="true"></span>
+                    <span class="legend-label">{{ level.label }}</span>
+                    <span class="legend-range">{{ level.range }}</span>
+                </li>
+                {% endfor %}
+            </ul>
+            <p class="hint">Trend an/aus beeinflusst nur die Anzeige im Browser. Serverseitige Aktualisierung läuft unabhängig.</p>
+        </section>
+    </main>
+    <footer class="site-footer">
+        <small>Quelle: Stadt Köln – aktualisiert alle {{ auto_refresh_seconds }} Sekunden. Zeitzone: {{ timezone }}.</small>
+    </footer>
+    <script type="application/json" id="initial-data">{{ initial_payload | tojson }}</script>
+</body>
+</html>
