@@ -1,8 +1,7 @@
 <img width="984" height="645" alt="image" src="https://github.com/user-attachments/assets/95da779b-64da-4b07-be34-801207b4c027" />
-<<<<<<< HEAD
+
 # rheinpegel-python-app
-=======
-# Rheinpegel App
+
 
 Eine moderne FastAPI-Anwendung, die den aktuellen Rheinpegel (Köln) abruft, zwischenspeichert und visuell aufbereitet. Die Anwendung kombiniert serverseitiges Polling mit einem reaktiven Frontend (AJAX, Countdown, Sparkline) und liefert zusätzlich Status- sowie Prometheus-Kennzahlen.
 
@@ -117,4 +116,5 @@ WantedBy=multi-user.target
 
 Viel Spaß beim Ausprobieren der Rheinpegel-App!
 >>>>>>> 6c0a1e2 (Initial commit)
+
 
